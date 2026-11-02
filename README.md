@@ -7,11 +7,7 @@
 > 2. นายภูรินท์ อินทจักร์ (670610723)  
 > 3. นายวรภพ เกิดทองสุก (670610729)  
 > **ฐานข้อมูล**: MySQL 8.0 `sport_cpe_db` (7 ตารางระดับ 3NF: `categories`, `users`, `promotions`, `products`, `promotion_products`, `orders`, `order_items`)  
-<<<<<<< Updated upstream
-> **Figma Prototype**: [(https://www.figma.com/design/6ETgU6OQVA3jAn5g673JSr/SportsShop---Low-Fi-Prototype?node-id=0-1&t=FEyHQze3KxA35akT-1)]
-=======
-> **Figma Prototype**: [SportsShop - Low-Fi Prototype (11 Frames)][(https://www.figma.com/design/6ETgU6OQVA3jAn5g673JSr/SportsShop---Low-Fi-Prototype?node-id=0-1&t=FEyHQze3KxA35akT-1)]  
->>>>>>> Stashed changes
+> **Figma Prototype**: [SportsShop - Low-Fi Prototype (11 Frames)](https://www.figma.com/design/6ETgU6OQVA3jAn5g673JSr/SportsShop---Low-Fi-Prototype?node-id=0-1&t=FEyHQze3KxA35akT-1)
 
 ---
 
@@ -37,39 +33,39 @@
 
 ---
 
-## 🚀 วิธีการติดตั้งและรันโปรเจกต์ (How to Run Laravel)
+## 🚀 วิธีการติดตั้งและรันโปรเจกต์ (How to Run SPORT.CPE)
 
-### ขั้นตอนที่ 1: เตรียมฐานข้อมูล MySQL (`sport_cpe_db`)
-1. เปิด **Docker Desktop** และรัน MySQL Container บนพอร์ต `3306` (`user: root`, `password: rootpass123`)
-2. เปิดโปรแกรม **DBeaver** รันไฟล์สคริปต์ **`database/schema.sql`** เพื่อสร้างฐานข้อมูลและนำเข้าข้อมูลตั้งต้น (128 สินค้า, 8 หมวดหมู่, 4 โปรโมชัน, 6 บัญชีผู้ใช้, 12 คำสั่งซื้อ)  
-   *(หรือสามารถรันผ่านคำสั่ง `php artisan migrate` ได้เช่นกัน)*
+### วิธีที่ 1: รันผ่าน Laravel Sail (Docker & Ubuntu WSL2 ตามมาตรฐาน Lab 261343) ✨ แนะนำ
+1. เปิด Docker Desktop บน Windows
+2. เปิด Terminal **Ubuntu 26.04 (WSL2)** และเข้าไปที่โฟลเดอร์โปรเจกต์:
+   ```bash
+   cd "/mnt/c/CPE Season 3/Demo/subject/Database-Lecture/project/sport-cpe-laravel"
+   ```
+3. สั่งรัน Container:
+   ```bash
+   ./sail up -d
+   ```
+4. ติดตั้ง dependencies และสร้าง Application Key (ทำเฉพาะครั้งแรก):
+   ```bash
+   ./sail composer install
+   ./sail artisan key:generate
+   ```
+5. รัน Migration และ Seed ข้อมูล 128 สินค้า:
+   ```bash
+   ./sail artisan migrate --seed
+   ```
+6. เปิดเบราว์เซอร์เข้าใช้งานได้ทันทีที่: **`http://localhost:8000`**
 
-### ขั้นตอนที่ 2: ตั้งค่า Environment
-คัดลอกไฟล์ `.env.example` เป็น `.env`:
-```bash
-cp .env.example .env
-```
-ตรวจสอบการตั้งค่าฐานข้อมูลในไฟล์ `.env`:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=sport_cpe_db
-DB_USERNAME=root
-DB_PASSWORD=rootpass123
-```
+---
 
-### ขั้นตอนที่ 3: ติดตั้ง Dependencies และสร้าง Application Key
+### วิธีที่ 2: รันแบบ Standalone (กรณีมี PHP 8.1+ และ Composer ในเครื่อง)
 ```bash
 composer install
+cp .env.example .env
 php artisan key:generate
-```
-
-### ขั้นตอนที่ 4: รัน Development Server
-```bash
+php artisan migrate --seed
 php artisan serve
 ```
-เปิดเว็บเบราว์เซอร์เข้าใช้งานที่: **`http://127.0.0.1:8000`**
 
 ---
 
