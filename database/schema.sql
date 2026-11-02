@@ -12,141 +12,13 @@
 SET FOREIGN_KEY_CHECKS = 0;
 SET NAMES utf8mb4;
 
--- 1. Create Database with strict utf8mb4 character set
-CREATE DATABASE IF NOT EXISTS sport_cpe_db 
-CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
-
-USE sport_cpe_db;
-
--- --------------------------------------------------------------------
--- 2. Drop existing tables safely in reverse dependency order
--- --------------------------------------------------------------------
-DROP TABLE IF EXISTS order_items;
-DROP TABLE IF EXISTS orders;
-DROP TABLE IF EXISTS promotion_products;
-DROP TABLE IF EXISTS promotions;
-DROP TABLE IF EXISTS products;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS users;
-
--- --------------------------------------------------------------------
--- 3. Table: CATEGORIES (หมวดหมู่กีฬา 8 ชนิด)
--- --------------------------------------------------------------------
-CREATE TABLE categories (
-    category_id INT AUTO_INCREMENT PRIMARY KEY,
-    category_name VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------------------
--- 4. Table: USERS (ผู้ใช้งานระบบ: สมาชิกลูกค้า และ แอดมิน)
--- --------------------------------------------------------------------
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(150) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
-    address TEXT,
-    role ENUM('customer', 'admin') DEFAULT 'customer',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------------------
--- 5. Table: PROMOTIONS (โปรโมชันส่วนลด % และ ซื้อ X แถม Y)
--- --------------------------------------------------------------------
-CREATE TABLE promotions (
-    promo_id INT AUTO_INCREMENT PRIMARY KEY,
-    promo_code VARCHAR(50) NULL UNIQUE,
-    promo_name VARCHAR(150) NOT NULL,
-    promo_type ENUM('PERCENT', 'BUY_X_GET_Y') NOT NULL,
-    discount_percent DECIMAL(5, 2) DEFAULT 0.00 CHECK (discount_percent >= 0 AND discount_percent <= 100),
-    buy_qty INT DEFAULT 0 CHECK (buy_qty >= 0),
-    get_qty INT DEFAULT 0 CHECK (get_qty >= 0),
-    min_order_amount DECIMAL(10, 2) DEFAULT 0.00 CHECK (min_order_amount >= 0),
-    usage_limit INT DEFAULT 1000 CHECK (usage_limit >= 0),
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------------------
--- 6. Table: PRODUCTS (อุปกรณ์กีฬา 128 รายการ - 3NF ปลอด Redundancy)
--- --------------------------------------------------------------------
-CREATE TABLE products (
-    product_id INT AUTO_INCREMENT PRIMARY KEY,
-    category_id INT NOT NULL,
-    name VARCHAR(200) NOT NULL,
-    brand VARCHAR(100) NOT NULL,
-    description TEXT,
-    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
-    stock_quantity INT NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
-    image_url VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_products_categories
-        FOREIGN KEY (category_id) REFERENCES categories (category_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------------------
--- 7. Table: PROMOTION_PRODUCTS (M:N Junction Table เชื่อมโปรกับสินค้า)
--- --------------------------------------------------------------------
-CREATE TABLE promotion_products (
-    promo_id INT NOT NULL,
-    product_id INT NOT NULL,
-    PRIMARY KEY (promo_id, product_id),
-    CONSTRAINT fk_pp_promotions
-        FOREIGN KEY (promo_id) REFERENCES promotions (promo_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_pp_products
-        FOREIGN KEY (product_id) REFERENCES products (product_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------------------
--- 8. Table: ORDERS (บิลคำสั่งซื้อสินค้า)
--- --------------------------------------------------------------------
-CREATE TABLE orders (
-    order_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    promo_id INT NULL,
-    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    subtotal DECIMAL(10, 2) NOT NULL CHECK (subtotal >= 0),
-    discount_amount DECIMAL(10, 2) DEFAULT 0.00 CHECK (discount_amount >= 0),
-    total_amount DECIMAL(10, 2) NOT NULL CHECK (total_amount >= 0),
-    shipping_address TEXT NOT NULL,
-    order_status ENUM('Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled') DEFAULT 'Pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_orders_users
-        FOREIGN KEY (user_id) REFERENCES users (user_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_orders_promotions
-        FOREIGN KEY (promo_id) REFERENCES promotions (promo_id)
-        ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------------------
--- 9. Table: ORDER_ITEMS (รายการสินค้าในแต่ละคำสั่งซื้อ - Line Items)
--- --------------------------------------------------------------------
-CREATE TABLE order_items (
-    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL CHECK (quantity > 0),
-    unit_price_at_purchase DECIMAL(10, 2) NOT NULL CHECK (unit_price_at_purchase >= 0),
-    discount_amount DECIMAL(10, 2) DEFAULT 0.00 CHECK (discount_amount >= 0),
-    free_qty INT DEFAULT 0 CHECK (free_qty >= 0),
-    item_total DECIMAL(10, 2) NOT NULL CHECK (item_total >= 0),
-    CONSTRAINT fk_order_items_orders
-        FOREIGN KEY (order_id) REFERENCES orders (order_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_order_items_products
-        FOREIGN KEY (product_id) REFERENCES products (product_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DELETE FROM order_items;
+DELETE FROM orders;
+DELETE FROM promotion_products;
+DELETE FROM products;
+DELETE FROM promotions;
+DELETE FROM users;
+DELETE FROM categories;
 
 -- ====================================================================
 -- INSERT DATA
@@ -172,12 +44,12 @@ INSERT INTO users (user_id, name, email, password_hash, phone, address, role) VA
 (5, 'Thanawat Siriwat', 'thanawat.s@cmu.ac.th', '$2y$10$ThanawatPassHash123456789012345678901', '092-345-6789', 'หอพักนักศึกษาชาย อาคาร 4 มหาวิทยาลัยเชียงใหม่ 50200', 'customer'),
 (6, 'Ploypailin Chaisri', 'ploypailin.c@yahoo.com', '$2y$10$PloyPassHash123456789012345678901234', '084-567-8901', '89 ถ.คลองชลประทาน ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'customer');
 
--- 3. Insert Promotions (Enhanced Attributes)
-INSERT INTO promotions (promo_id, promo_code, promo_name, promo_type, discount_percent, buy_qty, get_qty, min_order_amount, usage_limit, start_date, end_date, is_active) VALUES
-(1, 'SAVE15', 'คูปองส่วนลดพิเศษ 15%', 'PERCENT', 15.00, 0, 0, 1000.00, 500, '2026-10-01', '2026-12-31', 1),
-(2, 'PERKS20', 'คูปองสิทธิพิเศษนักกีฬา 20%', 'PERCENT', 20.00, 0, 0, 2000.00, 200, '2026-10-01', '2026-12-31', 1),
-(3, 'BUY2GET1', 'โปรโมชันซื้อ 2 แถม 1 อัตโนมัติ (แบดมินตัน)', 'BUY_X_GET_Y', 0.00, 2, 1, 0.00, 1000, '2026-10-01', '2026-12-31', 1),
-(4, 'SPORT10', 'คูปองส่วนลดต้อนรับสมาชิก 10%', 'PERCENT', 10.00, 0, 0, 500.00, 500, '2026-10-01', '2026-12-31', 1);
+-- 3. Insert Promotions (Aligned with Laravel Schema)
+INSERT INTO promotions (promo_id, promo_code, description, discount_type, discount_value, min_order_amount, start_date, end_date, is_active) VALUES
+(1, 'SAVE15', 'คูปองส่วนลดพิเศษ 15%', 'PERCENT', 15.00, 1000.00, '2026-10-01', '2026-12-31', 1),
+(2, 'PERKS20', 'คูปองสิทธิพิเศษนักกีฬา 20%', 'PERCENT', 20.00, 2000.00, '2026-10-01', '2026-12-31', 1),
+(3, 'BUY2GET1', 'โปรโมชันซื้อ 2 แถม 1 อัตโนมัติ (แบดมินตัน)', 'BOGO', 0.00, 0.00, '2026-10-01', '2026-12-31', 1),
+(4, 'SPORT10', 'คูปองส่วนลดต้อนรับสมาชิก 10%', 'PERCENT', 10.00, 500.00, '2026-10-01', '2026-12-31', 1);
 
 -- 4. Insert Products (128 Items: 16 per Category - Clean 3NF without is_promo_eligible)
 INSERT INTO products (product_id, category_id, name, brand, description, price, stock_quantity, image_url) VALUES
@@ -344,42 +216,45 @@ INSERT INTO promotion_products (promo_id, product_id) VALUES
 (3, 34);
 
 -- 6. Insert Orders (12 Past Realistic Orders)
-INSERT INTO orders (order_id, user_id, promo_id, order_date, subtotal, discount_amount, total_amount, shipping_address, order_status) VALUES
-(1001, 1, 1, '2026-10-15 10:30:00', 11500.00, 1725.00, 9775.00, 'ภาควิชาวิศวกรรมคอมพิวเตอร์ คณะวิศวกรรมศาสตร์ มช. 50200', 'Delivered'),
-(1002, 3, 2, '2026-10-17 14:15:00', 9500.00, 1900.00, 7600.00, '128/4 ถ.ห้วยแก้ว ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Delivered'),
-(1003, 4, NULL, '2026-10-18 16:45:00', 3780.00, 0.00, 3780.00, '45/2 หมู่ 5 ถ.นิมมานเหมินท์ ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Delivered'),
-(1004, 5, 3, '2026-10-20 11:20:00', 4900.00, 2450.00, 2450.00, 'หอพักนักศึกษาชาย อาคาร 4 มหาวิทยาลัยเชียงใหม่ 50200', 'Shipped'),
-(1005, 6, 1, '2026-10-22 09:10:00', 12900.00, 1935.00, 10965.00, '89 ถ.คลองชลประทาน ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Shipped'),
-(1006, 1, NULL, '2026-10-24 18:30:00', 4500.00, 0.00, 4500.00, 'ภาควิชาวิศวกรรมคอมพิวเตอร์ คณะวิศวกรรมศาสตร์ มช. 50200', 'Shipped'),
-(1007, 3, 1, '2026-10-26 13:00:00', 8190.00, 1228.50, 6961.50, '128/4 ถ.ห้วยแก้ว ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Paid'),
-(1008, 4, 2, '2026-10-27 15:40:00', 7850.00, 1570.00, 6280.00, '45/2 หมู่ 5 ถ.นิมมานเหมินท์ ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Paid'),
-(1009, 5, NULL, '2026-10-28 20:15:00', 4300.00, 0.00, 4300.00, 'หอพักนักศึกษาชาย อาคาร 4 มหาวิทยาลัยเชียงใหม่ 50200', 'Paid'),
-(1010, 6, NULL, '2026-10-29 11:05:00', 6430.00, 0.00, 6430.00, '89 ถ.คลองชลประทาน ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Pending'),
-(1011, 1, 1, '2026-10-30 16:50:00', 8900.00, 1335.00, 7565.00, 'ภาควิชาวิศวกรรมคอมพิวเตอร์ คณะวิศวกรรมศาสตร์ มช. 50200', 'Pending'),
-(1012, 3, NULL, '2026-10-31 08:20:00', 4200.00, 0.00, 4200.00, '128/4 ถ.ห้วยแก้ว ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Cancelled');
+INSERT INTO orders (order_id, user_id, promo_id, order_date, total_amount, discount_amount, net_amount, shipping_address, order_status, payment_method) VALUES
+(1001, 1, 1, '2026-10-15 10:30:00', 11500.00, 1725.00, 9775.00, 'ภาควิชาวิศวกรรมคอมพิวเตอร์ คณะวิศวกรรมศาสตร์ มช. 50200', 'Delivered', 'PromptPay'),
+(1002, 3, 2, '2026-10-17 14:15:00', 9500.00, 1900.00, 7600.00, '128/4 ถ.ห้วยแก้ว ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Delivered', 'PromptPay'),
+(1003, 4, NULL, '2026-10-18 16:45:00', 3780.00, 0.00, 3780.00, '45/2 หมู่ 5 ถ.นิมมานเหมินท์ ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Delivered', 'PromptPay'),
+(1004, 5, 3, '2026-10-20 11:20:00', 4900.00, 2450.00, 2450.00, 'หอพักนักศึกษาชาย อาคาร 4 มหาวิทยาลัยเชียงใหม่ 50200', 'Shipped', 'PromptPay'),
+(1005, 6, 1, '2026-10-22 09:10:00', 12900.00, 1935.00, 10965.00, '89 ถ.คลองชลประทาน ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Shipped', 'PromptPay'),
+(1006, 1, NULL, '2026-10-24 18:30:00', 4500.00, 0.00, 4500.00, 'ภาควิชาวิศวกรรมคอมพิวเตอร์ คณะวิศวกรรมศาสตร์ มช. 50200', 'Shipped', 'PromptPay'),
+(1007, 3, 1, '2026-10-26 13:00:00', 8190.00, 1228.50, 6961.50, '128/4 ถ.ห้วยแก้ว ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Paid', 'PromptPay'),
+(1008, 4, 2, '2026-10-27 15:40:00', 7850.00, 1570.00, 6280.00, '45/2 หมู่ 5 ถ.นิมมานเหมินท์ ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Paid', 'PromptPay'),
+(1009, 5, NULL, '2026-10-28 20:15:00', 4300.00, 0.00, 4300.00, 'หอพักนักศึกษาชาย อาคาร 4 มหาวิทยาลัยเชียงใหม่ 50200', 'Paid', 'PromptPay'),
+(1010, 6, NULL, '2026-10-29 11:05:00', 6430.00, 0.00, 6430.00, '89 ถ.คลองชลประทาน ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Pending', 'PromptPay'),
+(1011, 1, 1, '2026-10-30 16:50:00', 8900.00, 1335.00, 7565.00, 'ภาควิชาวิศวกรรมคอมพิวเตอร์ คณะวิศวกรรมศาสตร์ มช. 50200', 'Pending', 'PromptPay'),
+(1012, 3, NULL, '2026-10-31 08:20:00', 4200.00, 0.00, 4200.00, '128/4 ถ.ห้วยแก้ว ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200', 'Cancelled', 'PromptPay');
 
--- 7. Insert Order Items (Line Items with discount_amount and free_qty)
-INSERT INTO order_items (order_item_id, order_id, product_id, quantity, unit_price_at_purchase, discount_amount, free_qty, item_total) VALUES
-(1001, 17, 1, 6900.00, 1035.00, 0, 5865.00),
-(1001, 23, 4, 1150.00, 690.00, 0, 3910.00),
-(1002, 1, 1, 4600.00, 920.00, 0, 3680.00),
-(1002, 5, 1, 4900.00, 980.00, 0, 3920.00),
-(1003, 65, 1, 2790.00, 0.00, 0, 2790.00),
-(1003, 75, 1, 990.00, 0.00, 0, 990.00),
-(1004, 34, 2, 2450.00, 2450.00, 1, 2450.00),
-(1005, 81, 1, 12900.00, 1935.00, 0, 10965.00),
-(1006, 53, 1, 4500.00, 0.00, 0, 4500.00),
-(1007, 97, 1, 4990.00, 748.50, 0, 4241.50),
-(1007, 100, 1, 3200.00, 480.00, 0, 2720.00),
-(1008, 113, 1, 2350.00, 470.00, 0, 1880.00),
-(1008, 116, 1, 5500.00, 1100.00, 0, 4400.00),
-(1009, 39, 1, 390.00, 0.00, 0, 390.00),
-(1009, 42, 2, 1690.00, 0.00, 0, 3380.00),
-(1009, 43, 1, 530.00, 0.00, 0, 530.00),
-(1010, 84, 1, 4980.00, 0.00, 0, 4980.00),
-(1010, 87, 1, 1450.00, 0.00, 0, 1450.00),
-(1011, 11, 1, 8900.00, 1335.00, 0, 7565.00),
-(1012, 102, 1, 4200.00, 0.00, 0, 4200.00);
+-- 7. Insert Order Items (Line Items with unit_price, item_discount, subtotal)
+INSERT INTO order_items (order_id, product_id, quantity, unit_price, item_discount, subtotal) VALUES
+(1001, 17, 1, 6900.00, 1035.00, 5865.00),
+(1001, 23, 4, 1150.00, 690.00, 3910.00),
+(1002, 1, 1, 4600.00, 920.00, 3680.00),
+(1002, 5, 1, 4900.00, 980.00, 3920.00),
+(1003, 65, 1, 2790.00, 0.00, 2790.00),
+(1003, 75, 1, 990.00, 0.00, 990.00),
+(1004, 34, 2, 2450.00, 2450.00, 2450.00),
+(1005, 81, 1, 12900.00, 1935.00, 10965.00),
+(1006, 53, 1, 4500.00, 0.00, 4500.00),
+(1007, 97, 1, 4990.00, 748.50, 4241.50),
+(1007, 100, 1, 3200.00, 480.00, 2720.00),
+(1008, 113, 1, 2350.00, 470.00, 1880.00),
+(1008, 116, 1, 5500.00, 1100.00, 4400.00),
+(1009, 39, 1, 390.00, 0.00, 390.00),
+(1009, 42, 2, 1690.00, 0.00, 3380.00),
+(1009, 43, 1, 530.00, 0.00, 530.00),
+(1010, 84, 1, 4980.00, 0.00, 4980.00),
+(1010, 87, 1, 1450.00, 0.00, 1450.00),
+(1011, 11, 1, 8900.00, 1335.00, 7565.00),
+(1012, 102, 1, 4200.00, 0.00, 4200.00);
+
+-- Set Featured Products (Products displayed on homepage top banner)
+UPDATE products SET is_featured = 1 WHERE product_id IN (1, 17, 18, 25, 33, 49, 65, 81, 97, 113);
 
 SET FOREIGN_KEY_CHECKS = 1;
 
