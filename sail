@@ -16,3 +16,4 @@ elif [ -z "$1" ]; then
 else
     docker compose exec laravel.test "$@"
 fi
+
