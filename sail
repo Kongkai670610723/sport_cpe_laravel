@@ -5,6 +5,8 @@ if [ "$1" = "up" ]; then
     docker compose up "${@:2}"
 elif [ "$1" = "down" ]; then
     docker compose down "${@:2}"
+elif [ "$1" = "restart" ]; then
+    docker compose restart "${@:2}"
 elif [ "$1" = "artisan" ]; then
     docker compose exec laravel.test php artisan "${@:2}"
 elif [ "$1" = "composer" ]; then
