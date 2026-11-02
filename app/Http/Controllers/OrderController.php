@@ -114,3 +114,4 @@ class OrderController extends Controller
         return redirect()->route('orders.show', $order->order_id)->with('success', 'การสั่งซื้อเสร็จสมบูรณ์!');
     }
 }
+

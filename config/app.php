@@ -25,3 +25,4 @@ return [
     ])->toArray(),
     'aliases' => Facade::defaultAliases()->merge([])->toArray(),
 ];
+

@@ -27,3 +27,4 @@ class VoucherController extends Controller
         return redirect()->route('checkout.index', ['code' => $code])->with('success', "ใช้คูปอง '{$code}' เรียบร้อยแล้ว!");
     }
 }
+

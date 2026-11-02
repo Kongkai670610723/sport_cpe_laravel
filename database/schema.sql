@@ -393,3 +393,4 @@ UNION ALL SELECT 'products', COUNT(*) FROM products
 UNION ALL SELECT 'promotion_products', COUNT(*) FROM promotion_products
 UNION ALL SELECT 'orders', COUNT(*) FROM orders
 UNION ALL SELECT 'order_items', COUNT(*) FROM order_items;
+

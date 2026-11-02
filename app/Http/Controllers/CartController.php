@@ -94,3 +94,4 @@ class CartController extends Controller
         return redirect()->route('cart.index')->with('success', 'ลบสินค้าออกจากตะกร้าเรียบร้อยแล้ว');
     }
 }
+

@@ -37,3 +37,4 @@ class ProfileController extends Controller
         return redirect()->route('profile.show')->with('success', 'บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว');
     }
 }
+

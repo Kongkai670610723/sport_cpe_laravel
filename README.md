@@ -7,7 +7,11 @@
 > 2. นายภูรินท์ อินทจักร์ (670610723)  
 > 3. นายวรภพ เกิดทองสุก (670610729)  
 > **ฐานข้อมูล**: MySQL 8.0 `sport_cpe_db` (7 ตารางระดับ 3NF: `categories`, `users`, `promotions`, `products`, `promotion_products`, `orders`, `order_items`)  
+<<<<<<< Updated upstream
 > **Figma Prototype**: [(https://www.figma.com/design/6ETgU6OQVA3jAn5g673JSr/SportsShop---Low-Fi-Prototype?node-id=0-1&t=FEyHQze3KxA35akT-1)]
+=======
+> **Figma Prototype**: [SportsShop - Low-Fi Prototype (11 Frames)][(https://www.figma.com/design/6ETgU6OQVA3jAn5g673JSr/SportsShop---Low-Fi-Prototype?node-id=0-1&t=FEyHQze3KxA35akT-1)]  
+>>>>>>> Stashed changes
 
 ---
 

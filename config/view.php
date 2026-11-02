@@ -9,3 +9,4 @@ return [
         realpath(storage_path('framework/views'))
     ),
 ];
+

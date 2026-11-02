@@ -39,3 +39,4 @@ class Product extends Model
         );
     }
 }
+
