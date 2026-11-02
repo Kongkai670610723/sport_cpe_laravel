@@ -1,148 +1,162 @@
 @extends('layouts.app')
 
-@section('title', 'ตะกร้าสินค้า — SPORT.CPE')
+@section('title', 'Your Cart — SPORT.CPE')
 
 @section('content')
-<div class="space-y-6">
-
-    <div class="flex items-center justify-between">
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 flex items-center gap-2">
-            <span>🛒 ตะกร้าสินค้า</span>
-            <span class="text-sm font-normal text-slate-500">({{ count($cart) }} รายการ)</span>
-        </h1>
-        <a href="{{ route('products.index') }}" class="text-sm font-semibold text-accentOrange hover:underline">
-            ← เลือกซื้อสินค้าต่อ
-        </a>
+<main class="max-w-[1140px] w-full mx-auto px-6 py-6 flex-1">
+    <!-- Breadcrumb -->
+    <div class="text-xs text-slate-400 font-medium mb-4 flex items-center gap-2">
+        <a href="{{ route('home') }}" class="hover:text-slate-700">Home</a> <span>&gt;</span> <span class="text-slate-700 font-semibold">Cart Page</span>
     </div>
 
-    @if(empty($cart))
-        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
-            <span class="text-6xl block">🛍️</span>
-            <h2 class="text-xl font-bold text-slate-800">ยังไม่มีสินค้าในตะกร้าของคุณ</h2>
-            <p class="text-slate-500 text-sm max-w-md mx-auto">เลือกดูอุปกรณ์กีฬาคุณภาพสูงมากมาย ทั้งวิ่ง แบดมินตัน บาสเกตบอล และแคมป์ปิ้ง</p>
-            <a href="{{ route('products.index') }}" class="inline-block bg-accentOrange hover:bg-orange-600 text-white font-bold px-6 py-2.5 rounded-xl transition shadow">
-                เริ่มช้อปสินค้าเลย
-            </a>
-        </div>
-    @else
-        <!-- BOGO Notice Banner -->
-        @if($bogoDiscount > 0)
-            <div class="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 rounded-xl shadow-sm flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">🎉</span>
-                    <div>
-                        <p class="font-black text-sm">คุณได้รับสิทธิ์โปรโมชัน "ซื้อ 2 แถม 1 ฟรี!"</p>
-                        <p class="text-xs text-orange-100">ระบบหักส่วนลดสินค้าฟรีให้อัตโนมัติ ประหยัดไปได้ ฿{{ number_format($bogoDiscount, 2) }}</p>
+    <h1 class="text-3xl font-black text-slate-900 mb-6 tracking-tight">YOUR CART</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+        <!-- Left: Dynamic Cart Items inside ONE White Card (Matching Figma Frame 7) -->
+        <div class="md:col-span-8 bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm divide-y divide-slate-200/80">
+            @if(empty($cart))
+                <div class="py-12 text-center">
+                    <div class="text-4xl mb-3">🛒</div>
+                    <h3 class="text-base font-bold text-slate-800 mb-1">ยังไม่มีสินค้าในตะกร้าของคุณ</h3>
+                    <p class="text-xs text-slate-500 mb-5">เลือกดูอุปกรณ์กีฬาคุณภาพสูงมากมาย ทั้งวิ่ง แบดมินตัน บาสเกตบอล และแคมป์ปิ้ง</p>
+                    <div class="flex items-center justify-center gap-3">
+                        <a href="{{ route('home') }}" class="bg-[#0b1329] text-white font-bold px-5 py-2.5 rounded-xl text-xs hover:bg-slate-800 transition">ไปเลือกซื้อสินค้า →</a>
                     </div>
                 </div>
-            </div>
-        @endif
+            @else
+                @foreach($cart as $id => $item)
+                    @php
+                        $isBogo = !empty($item['promo_eligible']);
+                        $freeQty = $item['free_qty'] ?? 0;
+                        $lineTotal = ($item['price'] * $item['quantity']) - ($item['discount_amount'] ?? 0);
+                        $img = Str::startsWith($item['image_url'], '/') ? $item['image_url'] : '/' . $item['image_url'];
+                    @endphp
+                    <div class="py-5 first:pt-1 last:pb-1 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <a href="{{ route('products.show', $id) }}" class="w-24 h-24 rounded-2xl bg-[#f1f5f9] flex items-center justify-center p-2.5 shrink-0 border border-slate-200/60 hover:opacity-90 transition">
+                                <img src="{{ $img }}" alt="{{ $item['name'] }}" class="max-h-full max-w-full object-contain">
+                            </a>
+                            <div>
+                                <a href="{{ route('products.show', $id) }}" class="font-bold text-slate-900 text-base hover:text-[#ff6b00] transition">{{ $item['name'] }}</a>
+                                <p class="text-xs text-slate-500 mt-0.5">Brand: {{ $item['brand'] }}</p>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            <!-- Cart Items List -->
-            <div class="lg:col-span-2 space-y-4">
-                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm divide-y divide-slate-100">
-                    @foreach($cart as $id => $item)
-                        <div class="p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-4">
-                            <!-- Image -->
-                            <img src="{{ $item['image_url'] }}" alt="{{ $item['name'] }}" class="w-20 h-20 object-cover rounded-xl border border-slate-100 bg-slate-50 flex-shrink-0">
+                                @if($isBogo)
+                                    <div class="mt-1.5">
+                                        @if($freeQty > 0)
+                                            <span class="inline-block bg-[#dcfce7] text-[#166534] border border-green-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                                                🏷️ Buy 2 Get 1 Free Eligible • ซื้อ {{ $item['quantity'] }} ชิ้น แถมฟรี {{ $freeQty }} ชิ้นทันที! (รับทั้งหมด {{ $item['quantity'] + $freeQty }} ชิ้น • ประหยัด ฿{{ number_format($item['discount_amount'] ?? 0) }})
+                                            </span>
+                                        @else
+                                            <span class="inline-block bg-[#dcfce7] text-[#166534] border border-green-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                                                🏷️ Buy 2 Get 1 Free Eligible (ซื้อชิ้นนี้เพิ่มอีก {{ 2 - ($item['quantity'] % 2) }} ชิ้น ครบ 2 ชิ้น รับแถมฟรี 1 ชิ้นทันที!)
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
 
-                            <!-- Info -->
-                            <div class="flex-1 space-y-1 w-full text-center sm:text-left">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ $item['brand'] }}</span>
-                                <h3 class="font-bold text-slate-900 text-sm sm:text-base">{{ $item['name'] }}</h3>
-                                <div class="flex flex-wrap items-center gap-2 pt-1 justify-center sm:justify-start">
-                                    <span class="font-black text-slate-900">฿{{ number_format($item['price'], 2) }}</span>
-                                    @if(!empty($item['promo_eligible']))
-                                        <span class="text-[10px] bg-accentOrange/10 border border-accentOrange text-accentOrange px-2 py-0.5 rounded-md font-bold">
-                                            ร่วมโปร 2 แถม 1
-                                        </span>
+                                <div class="flex items-baseline gap-2 mt-2">
+                                    <span class="font-extrabold text-slate-900 text-lg">฿{{ number_format($item['price']) }}</span>
+                                    @if($freeQty > 0)
+                                        <span class="text-xs text-slate-500 font-medium">(ซื้อ {{ $item['quantity'] }} ชิ้น + <strong class="text-[#16a34a]">แถมฟรี {{ $freeQty }} ชิ้น</strong> = รับรวม {{ $item['quantity'] + $freeQty }} ชิ้น | ชำระเพียง <strong class="text-[#166534]">฿{{ number_format($lineTotal) }}</strong>)</span>
+                                    @elseif($item['quantity'] > 1)
+                                        <span class="text-xs text-slate-500 font-medium">(รวม {{ $item['quantity'] }} ชิ้น: ฿{{ number_format($lineTotal) }})</span>
                                     @endif
                                 </div>
-
-                                @if(!empty($item['free_qty']) && $item['free_qty'] > 0)
-                                    <p class="text-xs text-emerald-600 font-bold pt-1">
-                                        🎁 ฟรี {{ $item['free_qty'] }} ชิ้น (ลด ฿{{ number_format($item['discount_amount'], 2) }})
-                                    </p>
-                                @endif
                             </div>
+                        </div>
 
-                            <!-- Quantity Form & Total -->
-                            <div class="flex items-center gap-4">
-                                <form action="{{ route('cart.update', $id) }}" method="POST" class="flex items-center gap-1.5">
+                        <div class="flex flex-col items-end justify-between self-stretch py-0.5">
+                            <form action="{{ route('cart.destroy', $id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" title="ลบสินค้านี้" class="w-7 h-7 rounded-full bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 flex items-center justify-center text-xs transition">
+                                    🗑️
+                                </button>
+                            </form>
+
+                            <div class="flex items-center border border-slate-300 rounded-full px-3 py-1 text-xs font-bold bg-white shadow-sm gap-3 select-none">
+                                <form action="{{ route('cart.update', $id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PUT')
-                                    <label class="sr-only">จำนวน</label>
-                                    <input 
-                                        type="number" 
-                                        name="quantity" 
-                                        value="{{ $item['quantity'] }}" 
-                                        min="1" 
-                                        max="50"
-                                        onchange="this.form.submit()" 
-                                        class="w-16 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-center font-bold text-sm text-slate-800 focus:outline-none focus:border-accentOrange"
-                                    >
+                                    <input type="hidden" name="quantity" value="{{ max(0, $item['quantity'] - 1) }}">
+                                    <button type="submit" class="text-slate-500 hover:text-black text-sm px-1 font-extrabold">−</button>
                                 </form>
-
-                                <div class="text-right w-24">
-                                    <p class="text-sm font-black text-slate-900">
-                                        ฿{{ number_format(($item['price'] * $item['quantity']) - ($item['discount_amount'] ?? 0), 2) }}
-                                    </p>
-                                </div>
-
-                                <!-- Delete Form -->
-                                <form action="{{ route('cart.destroy', $id) }}" method="POST">
+                                <span class="text-slate-900 min-w-[16px] text-center">{{ $item['quantity'] }}</span>
+                                <form action="{{ route('cart.update', $id) }}" method="POST" class="inline">
                                     @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-slate-400 hover:text-red-500 p-1.5 transition" title="ลบสินค้านี้">
-                                        🗑️
-                                    </button>
+                                    @method('PUT')
+                                    <input type="hidden" name="quantity" value="{{ $item['quantity'] + 1 }}">
+                                    <button type="submit" class="text-slate-500 hover:text-black text-sm px-1 font-extrabold">+</button>
                                 </form>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Order Summary Card -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-                <h2 class="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-3">สรุปคำสั่งซื้อ</h2>
-
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between text-slate-600">
-                        <span>ยอดรวมสินค้า (Subtotal)</span>
-                        <span class="font-bold text-slate-900">฿{{ number_format($subtotal, 2) }}</span>
                     </div>
-
-                    @if($bogoDiscount > 0)
-                        <div class="flex justify-between text-accentOrange font-medium">
-                            <span>ส่วนลดโปร 2 แถม 1</span>
-                            <span>-฿{{ number_format($bogoDiscount, 2) }}</span>
-                        </div>
-                    @endif
-
-                    <div class="flex justify-between text-slate-600">
-                        <span>ค่าจัดส่ง (Shipping)</span>
-                        <span class="text-emerald-600 font-bold">{{ $subtotal >= 1000 ? 'ฟรี (ครบ ฿1,000)' : '฿50.00' }}</span>
-                    </div>
-
-                    <div class="pt-3 border-t border-slate-200 flex justify-between items-baseline">
-                        <span class="font-extrabold text-slate-900">ยอดชำระสุทธิ</span>
-                        <span class="text-2xl font-black text-slate-900">฿{{ number_format($total + ($subtotal >= 1000 ? 0 : 50), 2) }}</span>
-                    </div>
-                </div>
-
-                <a href="{{ route('checkout.index') }}" class="w-full bg-accentOrange hover:bg-orange-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2">
-                    <span>ดำเนินการชำระเงิน →</span>
-                </a>
-
-                <p class="text-[11px] text-slate-400 text-center">
-                    🔒 ปลอดภัยด้วยมาตรฐานระบบฐานข้อมูล ACID Transactions
-                </p>
-            </div>
+                @endforeach
+            @endif
         </div>
-    @endif
 
-</div>
+        <!-- Right: Dynamic Order Summary Card (Matching Figma Frame 7) -->
+        <div class="md:col-span-4 bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm">
+            <h2 class="font-bold text-slate-900 text-lg mb-4">Order Summary</h2>
+
+            <div class="space-y-3 text-sm border-b border-slate-200 pb-4 mb-4">
+                <div class="flex justify-between text-slate-600">
+                    <span>Subtotal</span>
+                    <span class="font-bold text-slate-900">฿{{ number_format($subtotal) }}</span>
+                </div>
+                <div class="flex justify-between text-[#e11d48] font-medium">
+                    <span>Discount</span>
+                    <span class="font-bold">-฿{{ number_format($totalDiscount) }}</span>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                    <span>Delivery Fee</span>
+                    <span class="font-bold text-slate-900">Free</span>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-5">
+                <span class="font-bold text-slate-900 text-base">Total</span>
+                <span class="text-2xl font-black text-slate-900">฿{{ number_format($netTotal) }}</span>
+            </div>
+
+            <!-- Promo Code Input & Apply Button -->
+            <form action="{{ route('cart.coupon.apply') }}" method="POST" class="flex items-center gap-2 mb-4">
+                @csrf
+                <div class="relative flex-1">
+                    <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🏷️</span>
+                    <input 
+                        type="text" 
+                        name="coupon_code"
+                        placeholder="Add promo code" 
+                        value="{{ session('coupon_code') }}"
+                        class="w-full border border-slate-300 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800 uppercase"
+                    >
+                </div>
+                <button type="submit" class="bg-[#0b1329] hover:bg-slate-800 text-white font-bold px-5 py-2 rounded-xl text-xs transition shrink-0">
+                    Apply
+                </button>
+            </form>
+
+            @if(session('coupon_code'))
+                <div class="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-800 mb-4">
+                    <span>โค้ด <strong>{{ session('coupon_code') }}</strong> ถูกใช้งานแล้ว</span>
+                    <form action="{{ route('cart.coupon.remove') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-rose-600 hover:underline font-bold">ยกเลิก</button>
+                    </form>
+                </div>
+            @endif
+
+            @if(!empty($cart))
+                <a href="{{ route('checkout.index') }}" class="w-full bg-[#0b1329] hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-sm">
+                    <span>Go to Checkout →</span>
+                </a>
+            @else
+                <button disabled class="w-full bg-slate-300 text-white font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 cursor-not-allowed">
+                    <span>Go to Checkout →</span>
+                </button>
+            @endif
+        </div>
+    </div>
+</main>
 @endsection
-

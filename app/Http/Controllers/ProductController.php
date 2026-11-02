@@ -8,6 +8,13 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
+    /**
+     * Exact Badminton ordering from Figma Frame 2
+     */
+    private const BADMINTON_FIGMA_ORDER = [
+        17, 18, 23, 20, 25, 27, 28, 30, 21, 22, 24, 26, 19, 29, 31, 32
+    ];
+
     public function index(Request $request)
     {
         $categorySlug = $request->get('category', 'all');
@@ -27,7 +34,10 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('brand', 'like', "%{$search}%");
+                  ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhereHas('category', function ($catQ) use ($search) {
+                      $catQ->where('category_name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -38,15 +48,20 @@ class ProductController extends Controller
         }
 
         $sort = $request->get('sort', 'default');
-        if ($sort === 'price_asc') {
+        if ($sort === 'asc' || $sort === 'price_asc') {
             $query->orderBy('price', 'asc');
-        } elseif ($sort === 'price_desc') {
+        } elseif ($sort === 'desc' || $sort === 'price_desc') {
             $query->orderBy('price', 'desc');
         } else {
-            $query->orderBy('product_id', 'asc');
+            if ($currentCategory && strtolower($currentCategory->category_name) === 'badminton' && !$request->filled('search')) {
+                $badmintonList = implode(',', self::BADMINTON_FIGMA_ORDER);
+                $query->orderByRaw("FIELD(product_id, {$badmintonList})");
+            } else {
+                $query->orderBy('product_id', 'asc');
+            }
         }
 
-        $products = $query->paginate(12);
+        $products = $query->paginate(12)->withQueryString();
 
         return view('products.index', compact('products', 'categories', 'categorySlug', 'currentCategory', 'sort'));
     }
@@ -62,4 +77,3 @@ class ProductController extends Controller
         return view('products.show', compact('product', 'relatedProducts'));
     }
 }
-
